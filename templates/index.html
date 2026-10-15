@@ -1,0 +1,12 @@
+{% extends "base.html" %}{% block title %}患者档案 | 电子健康档案{% endblock %}
+{% block content %}
+<div class="page-head"><div><p class="eyebrow">档案中心</p><h1>患者档案</h1><p class="muted">浏览患者基础信息与就诊记录时间线</p></div></div>
+<section class="grid two">
+  <div class="card"><div class="card-head"><h2>患者列表</h2><span class="count">{{ patients|length }} 人</span></div>
+    {% if patients %}<div class="patient-list">{% for p in patients %}<a class="patient-row" href="/patients/{{ p.id }}"><div class="avatar">{{ p.name[:1] }}</div><div class="grow"><strong>{{ p.name }}</strong><span>{{ p.patient_no }} · {{ p.gender }}{% if p.birth_date %} · {{ p.birth_date }}{% endif %}</span></div><div class="record-count">{{ p.encounter_count }} 条记录 <b>›</b></div></a>{% endfor %}</div>{% else %}<p class="empty">暂无患者档案</p>{% endif %}
+  </div>
+  <div class="card"><div class="card-head"><h2>新增患者</h2><span class="tag">基础档案</span></div>
+    <form method="post" action="/patients" class="form-grid"><label>患者编号 *<input name="patient_no" placeholder="如 P2026003" required></label><label>姓名 *<input name="name" required></label><label>性别 *<select name="gender"><option>男</option><option>女</option><option>其他</option></select></label><label>出生日期<input type="date" name="birth_date"></label><label>联系电话<input name="phone"></label><label>地址<input name="address"></label><label class="full">备注<textarea name="notes" rows="2"></textarea></label><button class="primary full" type="submit">保存患者档案</button></form>
+  </div>
+</section>
+{% endblock %}

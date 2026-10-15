@@ -1,0 +1,5 @@
+health_records.db
+__pycache__/
+*.py[cod]
+.venv/
+venv/

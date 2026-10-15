@@ -1,0 +1,12 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}电子健康档案{% endblock %}</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  <header class="topbar"><div class="container"><a class="brand" href="/">电子健康档案 <span>MVP</span></a><div class="subtitle">患者信息统一管理</div></div></header>
+  <main class="container">{% block content %}{% endblock %}</main>
+</body>
+</html>
