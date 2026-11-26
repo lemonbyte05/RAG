@@ -1,0 +1,42 @@
+{
+  "hospital": {
+    "name": "医院",
+    "patient_id": "病人编号",
+    "record_id": "就诊编号",
+    "date": "就诊日期",
+    "date_format": "%Y-%m-%d",
+    "template": "encounter.v1",
+    "fields": {
+      "complaint": "主诉",
+      "diagnosis": "诊断",
+      "treatment": "医嘱"
+    }
+  },
+  "examination": {
+    "name": "体检中心",
+    "patient_id": "person_id",
+    "record_id": "exam_id",
+    "date": "exam_date",
+    "date_format": "%Y/%m/%d",
+    "template": "vital_signs.v1",
+    "fields": {
+      "systolic": "sbp",
+      "diastolic": "dbp",
+      "temperature": "temp"
+    },
+    "factors": {}
+  },
+  "followup": {
+    "name": "社区随访",
+    "patient_id": "居民编号",
+    "record_id": "随访编号",
+    "date": "随访时间",
+    "date_format": "%Y-%m-%d %H:%M",
+    "template": "encounter.v1",
+    "fields": {
+      "complaint": "随访情况",
+      "treatment": "随访建议",
+      "notes": "备注"
+    }
+  }
+}

@@ -1,0 +1,17 @@
+{% extends "base.html" %}{% block title %}编辑 {{ patient.name }} | 电子健康档案{% endblock %}
+{% block content %}
+<p class="breadcrumb"><a href="/">患者档案</a> / <a href="/patients/{{ patient.id }}">{{ patient.name }}</a> / 编辑</p>
+<div class="page-head"><div><p class="eyebrow">档案维护</p><h1>编辑患者档案 <small>{{ patient.patient_no }}</small></h1><p class="muted">修改后可在患者详情页查看更新时间。</p></div></div>
+<section class="card">
+  <form method="post" action="/patients/{{ patient.id }}/edit" class="form-grid">
+    <label>患者编号 *<input name="patient_no" value="{{ patient.patient_no }}" required></label>
+    <label>姓名 *<input name="name" value="{{ patient.name }}" required></label>
+    <label>性别 *<select name="gender">{% for g in genders %}<option value="{{ g }}"{% if patient.gender == g %} selected{% endif %}>{{ g }}</option>{% endfor %}</select></label>
+    <label>出生日期<input type="date" name="birth_date" value="{{ patient.birth_date or '' }}"></label>
+    <label>联系电话<input name="phone" value="{{ patient.phone or '' }}"></label>
+    <label>地址<input name="address" value="{{ patient.address or '' }}"></label>
+    <label class="full">备注<textarea name="notes" rows="3">{{ patient.notes or '' }}</textarea></label>
+    <div class="full filter-actions"><button class="primary" type="submit">保存修改</button><a class="button ghost" href="/patients/{{ patient.id }}">取消</a></div>
+  </form>
+</section>
+{% endblock %}

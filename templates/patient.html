@@ -1,8 +1,80 @@
 {% extends "base.html" %}{% block title %}{{ patient.name }} | 电子健康档案{% endblock %}
 {% block content %}
 <p class="breadcrumb"><a href="/">患者档案</a> / {{ patient.name }}</p>
-<div class="page-head"><div><p class="eyebrow">患者档案</p><h1>{{ patient.name }} <small>{{ patient.patient_no }}</small></h1><p class="muted">{{ patient.gender }}{% if patient.birth_date %} · {{ patient.birth_date }}{% endif %}{% if patient.phone %} · {{ patient.phone }}{% endif %}</p></div><a class="button" href="/">返回列表</a></div>
-<section class="grid two detail-grid"><div class="card profile"><h2>基础信息</h2><dl><dt>患者编号</dt><dd>{{ patient.patient_no }}</dd><dt>性别</dt><dd>{{ patient.gender }}</dd><dt>出生日期</dt><dd>{{ patient.birth_date or '未填写' }}</dd><dt>联系电话</dt><dd>{{ patient.phone or '未填写' }}</dd><dt>地址</dt><dd>{{ patient.address or '未填写' }}</dd><dt>备注</dt><dd>{{ patient.notes or '无' }}</dd></dl></div>
-<div class="card"><div class="card-head"><h2>新增就诊记录</h2><span class="tag">就诊记录</span></div><form method="post" action="/patients/{{ patient.id }}/encounters" class="form-grid"><label>就诊日期 *<input type="date" name="encounter_date" value="{{ today }}" required></label><label>就诊类型 *<select name="encounter_type"><option>门诊</option><option>住院</option><option>体检</option><option>电话随访</option></select></label><label class="full">主诉<textarea name="complaint" rows="2"></textarea></label><label class="full">诊断<textarea name="diagnosis" rows="2"></textarea></label><label class="full">处理/医嘱<textarea name="treatment" rows="2"></textarea></label><label class="full">备注<textarea name="notes" rows="2"></textarea></label><button class="primary full" type="submit">保存就诊记录</button></form></div></section>
-<section class="card timeline"><div class="card-head"><h2>就诊时间线</h2><span class="count">{{ encounters|length }} 条</span></div>{% if encounters %}{% for e in encounters %}<article class="encounter"><div class="date-col"><strong>{{ e.encounter_date }}</strong><span>{{ e.encounter_type }}</span></div><div class="encounter-body">{% if e.complaint %}<h3>{{ e.complaint }}</h3>{% endif %}{% if e.diagnosis %}<p><b>诊断：</b>{{ e.diagnosis }}</p>{% endif %}{% if e.treatment %}<p><b>处理/医嘱：</b>{{ e.treatment }}</p>{% endif %}{% if e.notes %}<p class="muted">{{ e.notes }}</p>{% endif %}</div></article>{% endfor %}{% else %}<p class="empty">暂无就诊记录，可在上方新增。</p>{% endif %}</section>
+<div class="page-head"><div><p class="eyebrow">患者档案</p><h1>{{ patient.name }} <small>{{ patient.patient_no }}</small></h1><p class="muted">{{ patient.gender }}{% if patient.birth_date %} · {{ patient.birth_date }}{% endif %}{% if patient.phone %} · {{ patient.phone }}{% endif %}</p></div><div class="actions"><a class="button ghost" href="/patients/{{ patient.id }}/edit">编辑档案</a><a class="button ghost" href="/patients/{{ patient.id }}/export">导出档案(OpenEHR)</a>{% if patient.status == 'inactive' %}<form method="post" action="/patients/{{ patient.id }}/status"><input type="hidden" name="status" value="active"><button class="button" type="submit">启用档案</button></form>{% else %}<form method="post" action="/patients/{{ patient.id }}/status" onsubmit="return confirm('停用后该档案将从默认列表中隐藏，确认停用？')"><input type="hidden" name="status" value="inactive"><button class="button danger" type="submit">停用档案</button></form>{% endif %}<a class="button" href="/">返回列表</a></div></div>
+
+<section class="grid two detail-grid">
+  <div class="card profile"><h2>基础信息</h2><dl><dt>患者编号</dt><dd>{{ patient.patient_no }}</dd><dt>档案状态</dt><dd>{{ status_labels.get(patient.status, patient.status) }}</dd><dt>性别</dt><dd>{{ patient.gender }}</dd><dt>出生日期</dt><dd>{{ patient.birth_date or '未填写' }}</dd><dt>联系电话</dt><dd>{{ patient.phone or '未填写' }}</dd><dt>地址</dt><dd>{{ patient.address or '未填写' }}</dd><dt>备注</dt><dd>{{ patient.notes or '无' }}</dd></dl></div>
+  <div class="card"><div class="card-head"><h2>新增就诊记录</h2><span class="tag">就诊记录</span></div><form method="post" action="/patients/{{ patient.id }}/encounters" class="form-grid"><label>就诊日期 *<input type="date" name="encounter_date" value="{{ today }}" required></label><label>就诊类型 *<select name="encounter_type"><option>门诊</option><option>住院</option><option>体检</option><option>电话随访</option></select></label><label class="full">主诉<textarea name="complaint" rows="2"></textarea></label><label class="full">诊断<textarea name="diagnosis" rows="2"></textarea></label><label class="full">处理/医嘱<textarea name="treatment" rows="2"></textarea></label><label class="full">备注<textarea name="notes" rows="2"></textarea></label><button class="primary full" type="submit">保存就诊记录</button></form></div>
+</section>
+
+<section class="card">
+  <div class="card-head"><h2>OpenEHR 健康记录</h2><span class="tag">结构化 · 版本化</span></div>
+  <p class="muted small">基于 OpenEHR 双层建模：参考模型定义通用结构，临床模板按老年康养场景定制，记录支持版本管理与历史追溯。</p>
+  <form method="post" action="/patients/{{ patient.id }}/compositions" class="form-grid" data-composition-form>
+    <label>记录模板 *<select name="template_id" data-template-select>{% for t in templates %}<option value="{{ t.template_id }}">{{ t.name }}（{{ t.template_id }}）</option>{% endfor %}</select></label>
+    <label>录入人<input name="composer" placeholder="如 张医生"></label>
+    {% for t in templates %}
+    <div class="template-fields full" data-template-fields="{{ t.template_id }}"{% if not loop.first %} hidden{% endif %}>
+      <div class="form-grid">
+        {% for f in t.fields %}<label>{{ f.label }}{% if f.unit %}（{{ f.unit }}）{% endif %}<input name="{{ f.key }}" type="{% if f.kind == 'number' %}number{% else %}text{% endif %}" step="any"></label>{% endfor %}
+      </div>
+    </div>
+    {% endfor %}
+    <label class="full">备注<input name="note" placeholder="可选"></label>
+    <button class="primary full" type="submit">保存健康记录</button>
+  </form>
+
+  {% for c in compositions %}
+  <article class="composition">
+    <div class="card-head"><h3>{{ c.name }} <small>{{ c.template_id }}</small></h3><span class="tag">v{{ c.current_version }} · 共 {{ c.version_count }} 版</span></div>
+    <p class="muted small">{{ c.committed_at }}</p>
+    <div class="chips">{% for item in c.entries %}<span class="chip">{{ item.label }}：{{ item.value }}{{ item.unit or '' }}</span>{% else %}<span class="muted">无有效数据</span>{% endfor %}</div>
+    <details class="history"><summary>历史版本（{{ c.version_count }}）</summary>
+      {% for h in c.history %}<div class="version"><strong>v{{ h.version }}</strong> <span class="muted small">{{ h.committed_at }} · {{ h.audit.get('composer', '') }}{% if h.audit.get('note') %} · {{ h.audit.get('note') }}{% endif %}</span><div class="chips">{% for item in h.entries %}<span class="chip">{{ item.label }}：{{ item.value }}{{ item.unit or '' }}</span>{% endfor %}</div></div>{% endfor %}
+    </details>
+    <details class="history"><summary>新增版本</summary>
+      <form method="post" action="/compositions/{{ c.uid }}" class="form-grid">
+        {% for f in c.edit_fields %}<label>{{ f.label }}{% if f.unit %}（{{ f.unit }}）{% endif %}<input name="{{ f.key }}" type="{% if f.kind == 'number' %}number{% else %}text{% endif %}" step="any" value="{{ f.value }}"></label>{% endfor %}
+        <label>录入人<input name="composer" placeholder="如 张医生"></label>
+        <label class="full">备注<input name="note" placeholder="可选"></label>
+        <button class="primary full" type="submit">提交新版本</button>
+      </form>
+    </details>
+  </article>
+  {% else %}<p class="empty">暂无 OpenEHR 健康记录，可在上方新增。</p>{% endfor %}
+</section>
+
+<section class="grid two">
+  <div class="card">
+    <div class="card-head"><h2>附件资料</h2><span class="tag">非结构化</span></div>
+    <p class="muted small">支持文本、图像、音频、视频等；文本类文件将抽取内容供大模型使用。</p>
+    <form method="post" action="/patients/{{ patient.id }}/attachments" enctype="multipart/form-data" class="form-grid">
+      <label class="full">选择文件 *<input type="file" name="file" required></label>
+      <label>分类<input name="category" placeholder="如 检验报告"></label>
+      <label>说明<input name="description" placeholder="可选"></label>
+      <button class="primary full" type="submit">上传附件</button>
+    </form>
+    <div class="attachment-list">
+      {% for a in attachments %}
+      <div class="attachment"><div class="grow"><strong>{{ a.filename }}</strong><span>{{ a.modality }} · {{ (a.size / 1024) | round(1) }} KB · {{ a.uploaded_at }}{% if a.category %} · {{ a.category }}{% endif %}</span></div><a class="button ghost" href="/attachments/{{ a.id }}/download">下载</a><form method="post" action="/attachments/{{ a.id }}/delete" onsubmit="return confirm('确认删除该附件？')"><button class="button danger" type="submit">删除</button></form></div>
+      {% else %}<p class="empty">暂无附件资料</p>{% endfor %}
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-head"><h2>AI 健康助手</h2><span class="tag">大模型 API</span></div>
+    <p class="muted small">将结构化与非结构化档案组装为上下文，调用康养垂直大模型（未配置时返回本地兜底结果）。</p>
+    <form data-ask-form data-patient-id="{{ patient.id }}">
+      <label class="full">咨询问题<textarea name="question" rows="3" placeholder="如：请评估该患者血压情况并给出康养建议"></textarea></label>
+      <button class="primary full" type="submit">生成评估</button>
+    </form>
+    <pre class="answer" data-ask-result hidden></pre>
+  </div>
+</section>
+
+<section class="card timeline"><div class="card-head"><h2>就诊时间线</h2><span class="count">{{ encounters|length }} 条</span></div>{% if encounters %}{% for e in encounters %}<article class="encounter"><div class="date-col"><strong>{{ e.encounter_date }}</strong><span>{{ e.encounter_type }}</span></div><div class="encounter-body">{% if e.complaint %}<h3>{{ e.complaint }}</h3>{% endif %}{% if e.diagnosis %}<p><b>诊断：</b>{{ e.diagnosis }}</p>{% endif %}{% if e.treatment %}<p><b>处理/医嘱：</b>{{ e.treatment }}</p>{% endif %}{% if e.notes %}<p class="muted">{{ e.notes }}</p>{% endif %}{% if e.updated_at %}<p class="muted small">最后修改：{{ e.updated_at }}</p>{% endif %}<details class="history"><summary>编辑就诊记录</summary><form method="post" action="/patients/{{ patient.id }}/encounters/{{ e.id }}/edit" class="form-grid"><label>就诊日期 *<input type="date" name="encounter_date" value="{{ e.encounter_date }}" required></label><label>就诊类型 *<select name="encounter_type">{% for t in encounter_types %}<option{% if e.encounter_type == t %} selected{% endif %}>{{ t }}</option>{% endfor %}{% if e.encounter_type not in encounter_types %}<option selected>{{ e.encounter_type }}</option>{% endif %}</select></label><label class="full">主诉<textarea name="complaint" rows="2">{{ e.complaint or '' }}</textarea></label><label class="full">诊断<textarea name="diagnosis" rows="2">{{ e.diagnosis or '' }}</textarea></label><label class="full">处理/医嘱<textarea name="treatment" rows="2">{{ e.treatment or '' }}</textarea></label><label class="full">备注<textarea name="notes" rows="2">{{ e.notes or '' }}</textarea></label><button class="primary full" type="submit">保存修改</button></form></details></div></article>{% endfor %}{% else %}<p class="empty">暂无就诊记录，可在上方新增。</p>{% endif %}</section>
+<script src="/static/app.js"></script>
+<section class="card timeline"><h2>统一档案时间线</h2><p class="muted">按事件时间排序；未提供事件时间的手工记录使用录入时间。</p>
+{% for r in timeline %}<article class="encounter"><div class="date-col"><strong>{{ r.observed_at }}</strong><span>{{ r.source }} · v{{ r.version }}</span></div><div class="encounter-body"><h3>{{ r.name }}</h3>{% for item in r['items'] %}<p>{{ item.label }}：{{ item.value }} {{ item.unit or '' }}</p>{% endfor %}{% if r.provenance %}<details><summary>来源与原始记录</summary><pre style="white-space:pre-wrap;overflow-wrap:anywhere">{{ r.provenance|tojson(indent=2) }}</pre>{% if r.provenance.raw_record_id and not r.provenance.original_record %}<a href="/api/ehr/{{ patient.id }}/provenance/{{ r.id }}">查看原始导入记录</a>{% endif %}</details>{% endif %}</div></article>{% else %}<p>暂无记录</p>{% endfor %}</section>
 {% endblock %}

@@ -1,5 +1,10 @@
 health_records.db
+data/
 __pycache__/
 *.py[cod]
 .venv/
 venv/
+
+*.db
+*.db-wal
+*.db-shm
