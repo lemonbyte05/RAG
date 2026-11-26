@@ -1,0 +1,158 @@
+{
+  "version": "0.3.0-draft",
+  "updated_at": "2026-11-26",
+  "description": "内部统一健康数据字典。编码为项目自定义初始编码，不是国际标准术语；后续再研究到 LOINC/SNOMED CT 的映射。",
+  "conversion": "standard_value = value * factor + offset",
+  "data_types": ["number", "text", "date"],
+  "metrics": {
+    "BP.SYS": {
+      "code": "BP.SYS",
+      "name": "收缩压",
+      "name_en": "Systolic blood pressure",
+      "category": "vital_sign",
+      "data_type": "number",
+      "standard_unit": "mmHg",
+      "allowed_units": {
+        "mmHg": { "factor": 1.0, "offset": 0.0 },
+        "kPa": { "factor": 7.50062, "offset": 0.0 }
+      },
+      "precision": 0,
+      "plausible_range": { "min": 40, "max": 300 },
+      "measurement_methods": ["诊室测量", "家庭自测", "动态监测"],
+      "definition": "心脏收缩时动脉内的最高压力。",
+      "template": { "template_id": "vital_signs.v1", "field_key": "systolic" }
+    },
+    "BP.DIA": {
+      "code": "BP.DIA",
+      "name": "舒张压",
+      "name_en": "Diastolic blood pressure",
+      "category": "vital_sign",
+      "data_type": "number",
+      "standard_unit": "mmHg",
+      "allowed_units": {
+        "mmHg": { "factor": 1.0, "offset": 0.0 },
+        "kPa": { "factor": 7.50062, "offset": 0.0 }
+      },
+      "precision": 0,
+      "plausible_range": { "min": 20, "max": 200 },
+      "measurement_methods": ["诊室测量", "家庭自测", "动态监测"],
+      "definition": "心脏舒张时动脉内的最低压力。",
+      "template": { "template_id": "vital_signs.v1", "field_key": "diastolic" }
+    },
+    "HR": {
+      "code": "HR",
+      "name": "心率",
+      "name_en": "Heart rate",
+      "category": "vital_sign",
+      "data_type": "number",
+      "standard_unit": "次/分钟",
+      "allowed_units": {
+        "次/分钟": { "factor": 1.0, "offset": 0.0 },
+        "次/分": { "factor": 1.0, "offset": 0.0 },
+        "bpm": { "factor": 1.0, "offset": 0.0 }
+      },
+      "precision": 0,
+      "plausible_range": { "min": 20, "max": 250 },
+      "measurement_methods": ["静息", "运动后", "连续监测"],
+      "definition": "单位时间内心脏搏动次数。",
+      "template": { "template_id": "vital_signs.v1", "field_key": "heart_rate" }
+    },
+    "TEMP": {
+      "code": "TEMP",
+      "name": "体温",
+      "name_en": "Body temperature",
+      "category": "vital_sign",
+      "data_type": "number",
+      "standard_unit": "℃",
+      "allowed_units": {
+        "℃": { "factor": 1.0, "offset": 0.0 },
+        "°C": { "factor": 1.0, "offset": 0.0 },
+        "摄氏度": { "factor": 1.0, "offset": 0.0 },
+        "°F": { "factor": 0.55555556, "offset": -17.77777778 },
+        "℉": { "factor": 0.55555556, "offset": -17.77777778 },
+        "华氏度": { "factor": 0.55555556, "offset": -17.77777778 }
+      },
+      "precision": 1,
+      "plausible_range": { "min": 30, "max": 45 },
+      "measurement_methods": ["腋温", "口温", "耳温", "额温"],
+      "definition": "人体核心或体表测得的温度。",
+      "template": { "template_id": "vital_signs.v1", "field_key": "temperature" }
+    },
+    "SPO2": {
+      "code": "SPO2",
+      "name": "血氧饱和度",
+      "name_en": "Oxygen saturation",
+      "category": "vital_sign",
+      "data_type": "number",
+      "standard_unit": "%",
+      "allowed_units": {
+        "%": { "factor": 1.0, "offset": 0.0 },
+        "百分比": { "factor": 1.0, "offset": 0.0 }
+      },
+      "precision": 1,
+      "plausible_range": { "min": 50, "max": 100 },
+      "measurement_methods": ["指夹式脉搏血氧仪", "穿戴设备"],
+      "definition": "血液中氧合血红蛋白占全部可结合血红蛋白的百分比。",
+      "template": { "template_id": "vital_signs.v1", "field_key": "spo2" }
+    },
+    "GLU": {
+      "code": "GLU",
+      "name": "血糖",
+      "name_en": "Blood glucose",
+      "category": "laboratory",
+      "data_type": "number",
+      "standard_unit": "mmol/L",
+      "allowed_units": {
+        "mmol/L": { "factor": 1.0, "offset": 0.0 },
+        "mmol/l": { "factor": 1.0, "offset": 0.0 },
+        "mg/dL": { "factor": 0.0555, "offset": 0.0 },
+        "mg/dl": { "factor": 0.0555, "offset": 0.0 }
+      },
+      "precision": 1,
+      "plausible_range": { "min": 0.5, "max": 50 },
+      "measurement_methods": ["空腹", "餐后", "随机", "连续监测"],
+      "definition": "血液中葡萄糖的浓度。",
+      "template": { "template_id": "vital_signs.v1", "field_key": "blood_glucose" }
+    },
+    "WEIGHT": {
+      "code": "WEIGHT",
+      "name": "体重",
+      "name_en": "Body weight",
+      "category": "body_measurement",
+      "data_type": "number",
+      "standard_unit": "kg",
+      "allowed_units": {
+        "kg": { "factor": 1.0, "offset": 0.0 },
+        "公斤": { "factor": 1.0, "offset": 0.0 },
+        "千克": { "factor": 1.0, "offset": 0.0 },
+        "g": { "factor": 0.001, "offset": 0.0 },
+        "斤": { "factor": 0.5, "offset": 0.0 }
+      },
+      "precision": 1,
+      "plausible_range": { "min": 2, "max": 300 },
+      "measurement_methods": ["晨起空腹", "穿着状态", "设备测量"],
+      "definition": "人体质量。",
+      "template": { "template_id": "vital_signs.v1", "field_key": "weight" }
+    },
+    "HEIGHT": {
+      "code": "HEIGHT",
+      "name": "身高",
+      "name_en": "Body height",
+      "category": "body_measurement",
+      "data_type": "number",
+      "standard_unit": "cm",
+      "allowed_units": {
+        "cm": { "factor": 1.0, "offset": 0.0 },
+        "厘米": { "factor": 1.0, "offset": 0.0 },
+        "m": { "factor": 100.0, "offset": 0.0 },
+        "米": { "factor": 100.0, "offset": 0.0 },
+        "mm": { "factor": 0.1, "offset": 0.0 }
+      },
+      "precision": 1,
+      "plausible_range": { "min": 30, "max": 250 },
+      "measurement_methods": ["站立测量", "卧位测量"],
+      "definition": "人体从头顶到足底的垂直长度。",
+      "template": { "template_id": "general_info.v1", "field_key": "height" }
+    }
+  }
+}

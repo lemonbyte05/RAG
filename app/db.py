@@ -124,8 +124,10 @@ def init_db():
         db.executescript(SCHEMA)
         _migrate(db)
         from .ingest import init_ingest
+        from . import dictionary
         init_ingest(db)
         openehr.seed_templates(db)
+        dictionary.validate_against(openehr.TEMPLATES)
         if db.execute("SELECT COUNT(*) FROM patients").fetchone()[0] == 0:
             _seed_demo(db)
         for row in db.execute("SELECT id FROM patients").fetchall():

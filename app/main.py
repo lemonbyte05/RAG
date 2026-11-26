@@ -15,6 +15,7 @@ from fastapi.templating import Jinja2Templates
 from fastapi.staticfiles import StaticFiles
 
 from . import attachments as attachments_module
+from . import dictionary
 from . import llm
 from . import openehr
 from . import patients as patient_service
@@ -248,6 +249,19 @@ async def import_ehr(file: UploadFile = File(...)):
     with get_db() as db:
         patient_id = openehr.import_ehr(db, bundle)
     return RedirectResponse("/patients/%d" % patient_id, status_code=303)
+
+
+@app.get("/api/dictionary")
+def api_dictionary():
+    return JSONResponse(dictionary.load())
+
+
+@app.get("/api/dictionary/{code}")
+def api_dictionary_metric(code: str):
+    metric = dictionary.get(code)
+    if metric is None:
+        raise HTTPException(404, "指标编码不存在")
+    return JSONResponse(metric)
 
 
 @app.get("/api/patients/{patient_id}/context")

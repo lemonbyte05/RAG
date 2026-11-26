@@ -37,6 +37,13 @@ templates/        # Jinja2 页面
 static/           # 样式与脚本
 ```
 
+## 数据字典 API
+
+| 方法 | 路径 | 说明 |
+| --- | --- | --- |
+| GET | `/api/dictionary` | 返回完整健康数据字典（指标、单位、精度、合理范围） |
+| GET | `/api/dictionary/{code}` | 返回单个指标定义，如 `/api/dictionary/BP.SYS` |
+
 ## 大模型 API
 
 | 方法 | 路径 | 说明 |
@@ -74,4 +81,14 @@ $env:EHR_LLM_API_KEY="sk-..."
 - 重复患者编号给出友好提示；不存在的患者返回 404 页面。
 - 旧数据库启动时自动补齐 `patients.status/updated_at`、`encounters.updated_at` 列，不丢数据。
 - 新增 `tests/test_patients.py`，并扩展 `tests/test_http.py` 覆盖编辑、搜索、停用、就诊修订、校验与 404。
+
+## V0.3 任务一：统一健康数据字典（2026-11-26）
+
+- 新增 `config/data_dictionary.json`：8 个初始指标（收缩压、舒张压、心率、体温、血氧、血糖、体重、身高），包含自定义编码、数据类型、标准单位、允许单位与换算参数、精度、合理范围、测量方式和定义。
+- 新增 `app/dictionary.py`：负责字典加载、结构校验、模板覆盖率校验、单位换算与合理范围标记。
+- 单位换算是“值 × factor + offset”，支持 ℃/℉、mmHg/kPa、mmol/L/mg/dL、kg/g/斤、cm/m/mm 等；换算结果保留原始记录，不覆盖来源值。
+- 启动时校验字典与临床模板一致，模板中的数值字段必须都有字典定义。
+- 新增 `GET /api/dictionary`、`GET /api/dictionary/{code}`，供后续标准化、质量评价和其他板块调用。
+- 编码为项目内部初始编码，不是 LOINC/SNOMED CT 等国际标准；后续再研究标准术语映射。
+- 保持 COMPOSITION 为档案核心载体，本阶段不新建 `health_records` 表，避免两套数据不一致。
 外部大模型默认关闭；显式设置 `EHR_ALLOW_REMOTE_LLM=1` 才会调用配置的远端服务。

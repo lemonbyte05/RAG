@@ -51,6 +51,13 @@ class HTTPTests(unittest.TestCase):
         except urllib.error.HTTPError as exc: response=exc
         with response: return response.status,response.headers,response.read()
 
+    def test_dictionary_api(self):
+        status,_,body=self.request('/api/dictionary')
+        self.assertEqual(status,200);self.assertIn('BP.SYS',json.loads(body)['metrics'])
+        status,_,body=self.request('/api/dictionary/BP.SYS')
+        self.assertEqual(status,200);self.assertEqual(json.loads(body)['standard_unit'],'mmHg')
+        self.assertEqual(self.request('/api/dictionary/UNKNOWN')[0],404)
+
     def test_end_to_end(self):
         for path in ['/','/patients/1','/ingest','/static/style.css']:
             self.assertEqual(self.request(path)[0],200,path)

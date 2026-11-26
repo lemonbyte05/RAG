@@ -397,3 +397,16 @@ PDF、检验单图片、语音随访、设备信号转统一临床概念。先�
 - 不存在的患者返回 404 页面；API 路径返回 JSON 错误；重复编号仍返回 400 友好提示。
 - 新增 `tests/test_patients.py` 与 `tests/test_http.py::test_patient_management`，`python -m unittest discover -s tests -v` 全部通过。
 - 下一步按原计划进入数据来源管理与结构化健康指标；本阶段不引入新依赖，不 git commit。
+
+
+## 2026-11-26 决策记录：V0.3 任务一 统一健康数据字典
+
+- 确定 V0.3 主线为“接入后可理解”：统一编码、单位、时间与质量，而不是训练大模型或做完整 OpenEHR 服务器。
+- 新增 `config/data_dictionary.json` 作为唯一指标定义来源；首版 8 个指标：BP.SYS、BP.DIA、HR、TEMP、SPO2、GLU、WEIGHT、HEIGHT。
+- 指标字段包含 code、名称、data_type、standard_unit、allowed_units（factor+offset）、precision、plausible_range、measurement_methods、definition、对应的 template/field。
+- 编码是项目内部初始编码，不宣称是国际标准；LOINC/SNOMED CT 映射留作后续研究。
+- 保留 COMPOSITION 为档案核心载体，暂不新增 `health_records` 表；结构化查询后续以 OBSERVATION 索引或视图方式演进。
+- 新增 `app/dictionary.py`：加载与结构校验、模板覆盖率校验、`convert_to_standard`、`format_standard`、`plausible_status`。
+- 启动时执行 `dictionary.validate_against(openehr.TEMPLATES)`，模板中的数值字段必须全部有字典定义，防止字典与模板漂移。
+- 新增 `GET /api/dictionary`、`GET /api/dictionary/{code}`；异常值只做 below_range/above_range 标记，不删除、不擅自修正。
+- 新增 `tests/test_dictionary.py` 和 HTTP 字典接口测试；本阶段不引入新依赖，不 git commit。
