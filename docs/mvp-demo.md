@@ -24,14 +24,16 @@
 | POST `/ingest/bind` | 表单 source、external_id、patient_id；明确绑定，不允许覆盖到其他患者 |
 | POST `/api/ingest/csv` | multipart 表单 source、file；返回 job_id、imported、duplicate、failed、errors（行号与原因） |
 | GET `/api/ingest/jobs/{id}` | 批次映射配置快照、原始行、哈希和逐行结果 |
-| GET `/api/ehr/{id}/timeline` | patient_id、records；每条含 id、observed_at、time_basis、updated_at、version、source、provenance、items |
-| GET `/api/ehr/{id}/provenance/{uid}` | 患者名下记录的原始输入和映射快照 |
+| GET `/api/ehr/{id}/timeline` | patient_id、records；每条含 id、observed_at、recorded_at、updated_at、time_basis、version、source、normalization、provenance、items |
+| GET `/api/ehr/{id}/provenance/{uid}` | 患者名下记录的原始输入、映射快照和 standardization 结果 |
 | GET `/api/ehr/{id}/context` | 兼容原上下文接口，纳入传统就诊和来源记录 |
 | GET `/api/ehr/{id}/bundle` | 完整交换数据与统一时间线 |
 
-映射定义在 `config/mappings.json`，支持来源字段、模板、日期格式和数值倍率。
+映射定义在 `config/mappings.json`，支持来源字段、模板、日期格式，以及通过 `metrics` 声明的标准指标编码和原始单位。
+数值字段导入时调用 `app/dictionary.py` 换算为标准单位，并在 COMPOSITION 的 `normalization` 中保留原始值、原始单位、标准值和标准单位。
+时间语义：`observed_at` 为测量时间，`recorded_at` 为入库时间，`updated_at` 为最后更新时间。
 来源内记录编号唯一：相同内容重导跳过；同编号不同内容报告冲突，不自动覆盖。
-行级失败独立回滚，其他合法行可以成功；表头或文件格式错误拒绝整个文件。
+行级失败独立回滚，其他合法行可以成功；未知指标、不支持单位、非法数值都会返回明确原因；表头或文件格式错误拒绝整个文件。
 CSV 日期按本地时间解析。无事件时间的手工模板记录显示录入时间，time_basis=recorded。
 原始内容哈希按解析后的行计算，不等同于源文件字节哈希。
 
@@ -49,4 +51,4 @@ CSV 日期按本地时间解析。无事件时间的手工模板记录显示录�
 ## 验证
 
 执行 `python -m unittest discover -s tests -v`。
-测试使用临时目录和独立数据库，覆盖三源关联、日期/数值校验、部分成功、幂等、冲突、单位倍率、连接关闭、持久化、版本/附件往返、远端默认关闭及真实 HTTP 页面和接口流程。
+测试使用临时目录和独立数据库，覆盖三源关联、日期/数值校验、部分成功、幂等、冲突、单位换算与标准化、非法数值、未知指标、不支持单位、时间字段、连接关闭、持久化、版本/附件往返、远端默认关闭及真实 HTTP 页面和接口流程。

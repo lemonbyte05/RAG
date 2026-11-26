@@ -122,6 +122,14 @@ def _unit(metric, unit):
     raise ValueError("指标 %s 不支持单位：%s" % (metric["code"], unit))
 
 
+def resolve_unit(code, unit, path: Optional[Path] = None):
+    """返回 ``(规范化单位名, {factor, offset})``，单位不支持时抛出 ValueError。"""
+    metric = get(code, path)
+    if metric is None:
+        raise ValueError("未知指标编码：%s" % code)
+    return _unit(metric, unit)
+
+
 def convert_to_standard(value, code, unit, path: Optional[Path] = None):
     """把原始数值换算为字典中的标准单位，返回 ``Decimal``。"""
     metric = get(code, path)

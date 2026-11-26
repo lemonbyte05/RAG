@@ -130,7 +130,7 @@ def _compose_data(template, values):
     }
 
 
-def create_composition(db, patient_id, template_id, values, composer="系统录入", note=""):
+def create_composition(db, patient_id, template_id, values, composer="系统录入", note="", extra=None):
     template = TEMPLATES.get(template_id)
     if template is None:
         raise ValueError("未知的临床模板: %s" % template_id)
@@ -138,6 +138,8 @@ def create_composition(db, patient_id, template_id, values, composer="系统录�
     uid = uuid4().hex
     ts = _now()
     data = _compose_data(template, values)
+    if extra:
+        data.update(extra)
     audit = {"composer": composer or "系统录入", "note": note or "", "committed_at": ts}
     db.execute(
         "INSERT INTO compositions (uid,ehr_id,template_id,name,current_version,data,committed_at) VALUES (?,?,?,?,?,?,?)",
@@ -161,8 +163,9 @@ def update_composition(db, uid, values, composer="系统录入", note=""):
     ts = _now()
     data = _compose_data(template, values)
     previous = json.loads(row["data"])
-    if previous.get("provenance"):
-        data["provenance"] = previous["provenance"]
+    for key in ("provenance", "normalization"):
+        if previous.get(key):
+            data[key] = previous[key]
     audit = {"composer": composer or "系统录入", "note": note or "", "committed_at": ts}
     db.execute(
         "UPDATE compositions SET current_version=?, data=?, committed_at=? WHERE uid=?",

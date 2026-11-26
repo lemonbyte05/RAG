@@ -411,4 +411,7 @@ def record_provenance(patient_id: int, uid: str):
         origin = db.execute('SELECT r.*,j.source_id,j.filename,j.mapping_json FROM raw_records r JOIN ingest_jobs j ON j.id=r.job_id JOIN compositions c ON c.uid=r.composition_uid JOIN ehrs e ON e.ehr_id=c.ehr_id WHERE c.uid=? AND e.patient_id=? AND r.status=?', (uid,patient_id,'imported')).fetchone()
         if not origin:
             raise HTTPException(404,'来源记录不存在')
-        return dict(origin)
+        result = dict(origin)
+        composition = db.execute('SELECT data FROM compositions WHERE uid=?', (uid,)).fetchone()
+        result['normalization'] = json.loads(composition['data']).get('normalization') if composition else None
+        return result

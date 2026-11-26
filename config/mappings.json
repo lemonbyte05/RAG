@@ -24,7 +24,11 @@
       "diastolic": "dbp",
       "temperature": "temp"
     },
-    "factors": {}
+    "metrics": {
+      "systolic": { "code": "BP.SYS", "source_unit": "mmHg" },
+      "diastolic": { "code": "BP.DIA", "source_unit": "mmHg" },
+      "temperature": { "code": "TEMP", "source_unit": "℃" }
+    }
   },
   "followup": {
     "name": "社区随访",

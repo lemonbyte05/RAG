@@ -91,4 +91,15 @@ $env:EHR_LLM_API_KEY="sk-..."
 - 新增 `GET /api/dictionary`、`GET /api/dictionary/{code}`，供后续标准化、质量评价和其他板块调用。
 - 编码为项目内部初始编码，不是 LOINC/SNOMED CT 等国际标准；后续再研究标准术语映射。
 - 保持 COMPOSITION 为档案核心载体，本阶段不新建 `health_records` 表，避免两套数据不一致。
+
+## V0.3 任务二：标准化接入与时间语义（2026-11-26）
+
+- `app/ingest.py` 导入数值字段时调用 `app/dictionary.py`，按指标编码和来源单位换算为标准单位。
+- `config/mappings.json` 新增 `metrics`：为每个数值字段声明标准指标编码和原始单位，例如体温 `TEMP` / `℃`、血糖 `GLU` / `mg/dL`。
+- 支持 ℃/℉、mmHg/kPa、mmol/L/mg/dL、kg/g/斤、cm/m/mm 等单位换算；不支持的指标或单位、非法数值都会在行级失败并返回明确原因。
+- COMPOSITION 新增 `normalization`：保存每个数值字段的 `metric_code`、`raw_value`、`raw_unit`、`standard_value`、`standard_unit`、`plausible`，原始值不丢失。
+- 明确区分时间语义：`observed_at` 测量时间、`recorded_at` 入库时间、`updated_at` 更新时间；`record_origins` 同步保存 `recorded_at/updated_at`。
+- `GET /api/ehr/{id}/provenance/{uid}` 返回 `normalization`，可直接核对原始值与标准值。
+- 启动时 `ingest.validate_rules()` 校验映射配置与模板、数据字典一致，防止配置漂移。
+- 新增/扩展测试覆盖单位换算、非法数值、未知指标、不支持单位、重复导入、时间字段和来源追溯。
 外部大模型默认关闭；显式设置 `EHR_ALLOW_REMOTE_LLM=1` 才会调用配置的远端服务。

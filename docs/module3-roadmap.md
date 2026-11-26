@@ -410,3 +410,15 @@ PDF、检验单图片、语音随访、设备信号转统一临床概念。先�
 - 启动时执行 `dictionary.validate_against(openehr.TEMPLATES)`，模板中的数值字段必须全部有字典定义，防止字典与模板漂移。
 - 新增 `GET /api/dictionary`、`GET /api/dictionary/{code}`；异常值只做 below_range/above_range 标记，不删除、不擅自修正。
 - 新增 `tests/test_dictionary.py` 和 HTTP 字典接口测试；本阶段不引入新依赖，不 git commit。
+
+
+## 2026-11-26 决策记录：V0.3 任务二 标准化接入与时间语义
+
+- `app/ingest.py` 在导入数值字段时调用 `app/dictionary.py`，不再使用简单 `factors` 倍率；`mappings.json` 的 `metrics` 声明标准指标编码和来源单位。
+- `metrics` 的 `code` 必须与模板字段对应的字典编码一致，否则该行失败；未显式配置时默认按字典标准单位处理。
+- 换算后的标准值写入 COMPOSITION items；COMPOSITION 增加 `normalization`，保存 metric_code、raw_value、raw_unit、standard_value、standard_unit、plausible，原始值始终可从 `raw_records` 追溯。
+- 时间语义明确为：`observed_at` 测量时间、`recorded_at` 入库时间、`updated_at` 更新时间；`record_origins` 新增 `recorded_at/updated_at` 并做旧库补列迁移。
+- 异常值只标记（ok/below_range/above_range），不删除、不自动修正；非法数值、未知指标、不支持单位按行失败并返回明确原因。
+- 启动时执行 `ingest.validate_rules()`，校验来源模板、字段、指标编码和单位；`GET /api/ehr/{id}/provenance/{uid}` 返回 `normalization`。
+- 扩展测试覆盖单位换算、非法数值、未知指标、不支持单位、重复导入、时间字段和来源追溯；不引入新依赖，不 git commit。
+- 下一步：数据质量评价与多源冲突处理；仍以 COMPOSITION 为核心，不新建重复的健康数据表。

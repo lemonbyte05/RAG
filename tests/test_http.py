@@ -72,6 +72,13 @@ class HTTPTests(unittest.TestCase):
         sourced=[r for r in timeline if r['source']!='manual']
         self.assertEqual(len(sourced),3)
         self.assertEqual(self.request('/api/ehr/1/provenance/'+sourced[0]['id'])[0],200)
+        exam=next(r for r in sourced if r['source']=='examination')
+        self.assertIn('normalization',exam);self.assertIn('recorded_at',exam)
+        status,_,body=self.request('/api/ehr/1/provenance/'+exam['id'])
+        self.assertEqual(status,200)
+        normalization=json.loads(body)['normalization']
+        self.assertEqual(normalization['temperature']['standard_value'],'36.5')
+        self.assertEqual(normalization['temperature']['standard_unit'],'℃')
         page=self.request('/patients/1')[2].decode()
         self.assertIn('统一档案时间线',page);self.assertIn('hospital',page)
         self.assertEqual(len(json.loads(self.request('/api/ehr/1/context')[2])['structured_records']),len(timeline))
